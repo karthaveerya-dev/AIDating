@@ -36,16 +36,17 @@ class UserController extends ApiController
             ];
         }
         
-        $name = null;
+        $username = null;
         $email = null;
         $password_hash = null;
         $status = User::STATUS_ACTIVE;
-        $token = null;
+        $accessToken = null;
+        $tokenTime = null;
     
         $user = new User();
     
-        if ($request->post('name')) {
-            $name = $request->post('name');
+        if ($request->post('username')) {
+            $username = $request->post('username');
         }
         if ($request->post('email')) {
             $email = $request->post('email');
@@ -59,27 +60,27 @@ class UserController extends ApiController
             $user = $user->findByUseremail($email);
         }
 
-        $user->name = $name;
+        $user->username = $username;
         $user->email = $email;
         $user->status = $status;
         $user->password_hash = $password_hash;
-        $user->token = $token;
-
+        $user->accessToken = $user->generateToken();
+        $user->tokenTime = date_create('now')->format('U');
         
         
         if ($user->save()) {
             return [
                 'status' => true,
-                'code' => 'saved',
-                'user_id' => $user->id
+                'statusCode' => '1',
+                'data' => $user
             ];
         } else {
             
             $errors = $user->getErrors();
             return [
                 'status' => false,
-                'code' => 'error',
-                'error' => $errors
+                'statusCode' => '2',
+                'errorDescription' => $errors
             ];
         }
 
@@ -95,13 +96,13 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'code' => 'error',
-                'error' => 'Request is empty'
+                'statusCode' => '4',
+                'errorDescription' => 'Request is empty'
             ];
         }
 
-        if ($request->post('name')) {
-            $name = $request->post('name');
+        if ($request->post('username')) {
+            $username = $request->post('username');
         }
         if ($request->post('email')) {
             $email = $request->post('email');
@@ -116,18 +117,32 @@ class UserController extends ApiController
         $user = $user->findByUseremail($email);
 
         if (Yii::$app->getSecurity()->validatePassword($password, $user->password_hash)) {
-            return [
-                'status' => true,
-                'code' => 'exists',
-                //'user' => $user
-            ];
+
+            $user->accessToken = $user->generateToken();
+            $user->tokenTime = date_create('now')->format('U');
+
+            if($user->save()){
+                return [
+                    'status' => true,
+                    'statusCode' => '1',
+                    'data' => $user
+                ];
+            }else{
+                $errors = $user->getErrors();
+                return [
+                    'status' => false,
+                    'statusCode' => '2',
+                    'errorDescription' => 'Not saved in db'.$errors,
+                ];
+            }
+            
         } else {
             
             $errors = $user->getErrors();
             return [
                 'status' => false,
-                'code' => 'not exists or error',
-                'error' => $errors,
+                'statusCode' => '3',
+                'errorDescription' => $errors,
             ];
         }
 
@@ -142,17 +157,18 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'code' => 'error',
-                'error' => 'Request is empty'
+                'statusCode' => '4',
+                'errorDescription' => 'Request is empty'
             ];
         }
 
         //for user class        
-        $name = null;
+        $username = null;
         $email = null;
         $password_hash = null;
         $status = User::STATUS_ACTIVE;
-        $token = null;
+        $user->accessToken = $user->generateToken();
+        $user->tokenTime = date_create('now')->format('U');
 
         //for social class
         $user_id = null;
@@ -179,8 +195,8 @@ class UserController extends ApiController
                     $errors = $user->getErrors();
                     return [
                         'status' => false,
-                        'code' => 'error',
-                        'error' => $errors,
+                        'statusCode' => '3',
+                        'errorDescription' => $errors,
                     ];
                 }
             }
@@ -195,15 +211,15 @@ class UserController extends ApiController
                 if($social->save()){
                     return [
                         'status' => true,
-                        'code' => 'saved',
-                        'user_id' => $user->id
+                        'statusCode' => '1',
+                        'data' => $user->id
                     ];
                 }else{
                     $errors = $social->getErrors();
                     return [
                         'status' => false,
-                        'code' => 'error',
-                        'error' => $errors,
+                        'statusCode' => '2',
+                        'errorDescription' => $errors,
                     ];
                 }
             }
@@ -223,8 +239,8 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'code' => 'error',
-                'error' => 'Request is empty'
+                'statusCode' => '4',
+                'errorDescription' => 'Request is empty'
             ];
         }
 
@@ -239,13 +255,14 @@ class UserController extends ApiController
         if($data){
             return [
                 'status' => true,
-                'code' => 'exists',
-                'user' => $data->id
+                'statusCode' => '1',
+                'data' => $data
             ];
         }else{
             return [
                 'status' => false,
-                'code' => 'user is not exists',
+                'statusCode' => '2',
+                'errorDescription' => 'user is not exists',
             ];
         }
         
@@ -267,5 +284,44 @@ class UserController extends ApiController
         
     }
 
+/*-----------------------------*/
+
+
+
+
+
+
+
+
+/*check token and renew token lifetime*/
+
+    public function actionCheckToken(){
+
+        $request = \Yii::$app->request;
+
+        if(!$request->post()){
+            return [
+                'status' => false,
+                'statusCode' => '4',
+                'errorDescription' => 'Request is empty'
+            ];
+        }
+
+        if($request->post('accessToken')){
+            $accessToken = $request->post('accessToken');
+
+            $user = new User;
+            $data = $user::findIdentityByAccessToken($accessToken);
+
+            return [
+                'status' => true,
+                'statusCode' => '1',
+                'data' => $data
+            ];
+        }
+
+        
+
+    }
 
 }

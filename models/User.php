@@ -8,9 +8,10 @@ use Yii;
  * This is the model class for table "user".
  *
  * @property int $id
- * @property string|null $name
+ * @property string|null $username
  * @property string|null $email
- * @property string|null $token
+ * @property string|null $accessToken
+ * @property string|null $tokenTime
  * @property string $password_hash
  * @property int $status
  * @property string|null $created_date
@@ -38,9 +39,9 @@ class User extends \yii\db\ActiveRecord
         return [
             [['password_hash'], 'required'],
             [['status'], 'integer'],
-            [['created_date', 'updated_date'], 'safe'],
-            [['name', 'email', 'token', 'password_hash'], 'string', 'max' => 255],
-            [['name','email'], 'unique'],
+            [['created_date', 'updated_date', 'tokenTime'], 'safe'],
+            [['username', 'email', 'accessToken', 'password_hash'], 'string', 'max' => 255],
+            [['username','email'], 'unique'],
         ];
     }
 
@@ -63,9 +64,9 @@ class User extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Name',
+            'username' => 'Name',
             'email' => 'Email',
-            'token' => 'Token',
+            'accessToken' => 'Token',
             'password_hash' => 'Password Hash',
             'status' => 'Status',
             'created_date' => 'Created Date',
@@ -78,6 +79,61 @@ class User extends \yii\db\ActiveRecord
         return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
     }    
 
-    
+    /*--------------------------------*/
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function findIdentity($id)
+    {
+        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        $users = self::find()->indexBy('id')->all();
+
+        foreach ($users as $user) {
+            if ($user['accessToken'] === $token) {
+                return new static($user);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds user by username
+     *
+     * @param string $username
+     * @return static|null
+     */
+    public static function findByUsername($username)
+    {
+        foreach (self::$users as $user) {
+            if (strcasecmp($user['username'], $username) === 0) {
+                return new static($user);
+            }
+        }
+
+        return null;
+    }
+
+    public function generateToken(){
+        //Generate a random string.
+        $token = openssl_random_pseudo_bytes(16);
+         
+        //Convert the binary data into hexadecimal representation.
+        $token = bin2hex($token);
+
+        return $token;
+    }
+
+    public function checkToken($lifetime){
+
+    }
 
 }
