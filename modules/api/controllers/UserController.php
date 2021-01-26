@@ -175,8 +175,7 @@ class UserController extends ApiController
         $email = null;
         $password_hash = null;
         $status = User::STATUS_ACTIVE;
-        $user->accessToken = $user->generateToken();
-        $user->tokenTime = date_create('now')->format('U');
+        
 
         //for social class
         $user_id = null;
@@ -192,11 +191,16 @@ class UserController extends ApiController
             $email = $request->post('email');
             $user = $user->findByUseremail($email);
             
+            //$user->accessToken = $user->generateToken();
+            //$user->tokenTime = date_create('now')->format('U');
+
             if(!$user){
                 $user = new User();
                 $user->email = $email;
                 $user->password_hash = '-';
                 $user->status = $status;
+                $user->accessToken = $user->generateToken();
+                $user->tokenTime = date_create('now')->format('U');
                 if($user->save(false)){
                     
                 }else{
@@ -216,20 +220,32 @@ class UserController extends ApiController
                 $key = $request->post('key');
                 $social->key = $key;
 
-                if($social->save()){
-                    return [
-                        'status' => true,
-                        'statusCode' => '1',
-                        'data' => $user->id
-                    ];
+                $user->accessToken = $user->generateToken();
+                $user->tokenTime = date_create('now')->format('U');
+                if($user->save()){
+                    if($social->save()){
+                        return [
+                            'status' => true,
+                            'statusCode' => '1',
+                            'data' => $user
+                        ];
+                    }else{
+                        $errors = $social->getErrors();
+                        return [
+                            'status' => false,
+                            'statusCode' => '2',
+                            'errorDescription' => $errors,
+                        ];
+                    }
                 }else{
-                    $errors = $social->getErrors();
+                    $errors = $user->getErrors();
                     return [
                         'status' => false,
-                        'statusCode' => '2',
+                        'statusCode' => '4',
                         'errorDescription' => $errors,
                     ];
                 }
+                
             }
                      
         }

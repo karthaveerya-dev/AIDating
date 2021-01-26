@@ -76,7 +76,16 @@ class User extends \yii\db\ActiveRecord
 
     public static function findByUseremail($email)
     {
-        return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+        //return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+        $users = self::find()->indexBy('id')->all();
+
+        foreach ($users as $user) {
+            if ($user['email'] === $email) {
+                return $user;
+            }
+        }
+
+        return null;
     }    
 
     /*--------------------------------*/
