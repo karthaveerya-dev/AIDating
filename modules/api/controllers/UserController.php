@@ -116,6 +116,14 @@ class UserController extends ApiController
         $user = new User();
         $user = $user->findByUseremail($email);
 
+        if(!$user){
+            return [
+                    'status' => false,
+                    'statusCode' => '5',
+                    'errorDescription' => 'User not found',
+                ];
+        }
+
         if (Yii::$app->getSecurity()->validatePassword($password, $user->password_hash)) {
 
             $user->accessToken = $user->generateToken();
