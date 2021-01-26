@@ -22,7 +22,7 @@ class User extends \yii\db\ActiveRecord
 
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 0;
-
+    //const TOKEN_LIFE = Yii::$app->params['tokenLife'];
     /**
      * {@inheritdoc}
      */
@@ -98,7 +98,7 @@ class User extends \yii\db\ActiveRecord
 
         foreach ($users as $user) {
             if ($user['accessToken'] === $token) {
-                return new static($user);
+                return $user;
             }
         }
 
@@ -132,8 +132,6 @@ class User extends \yii\db\ActiveRecord
         return $token;
     }
 
-    public function checkToken($lifetime){
-
-    }
+    
 
 }

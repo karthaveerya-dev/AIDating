@@ -313,15 +313,37 @@ class UserController extends ApiController
             $user = new User;
             $data = $user::findIdentityByAccessToken($accessToken);
 
-            return [
-                'status' => true,
-                'statusCode' => '1',
-                'data' => $data
-            ];
+            if(($data->tokenTime + Yii::$app->params['tokenLife']) > date_create('now')->format('U')){
+                $data->tokenTime = date_create('now')->format('U');
+
+                if($data->save()){
+                return [
+                        'status' => true,
+                        'statusCode' => '1',
+                        'data' => $data
+                    ];  
+                }else{
+                    $errors = $data->getErrors();
+                    return [
+                        'status' => false,
+                        'statusCode' => '3',
+                        'errorDescription' => $errors
+                    ];
+                }
+            }else{
+                return [
+                    'status' => false,
+                    'statusCode' => '2',
+                    'errorDescription' => 'Token is expired'
+                ];
+            }
         }
-
-        
-
     }
+
+
+
+
+
+
 
 }
