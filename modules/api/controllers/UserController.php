@@ -31,8 +31,8 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'code' => 'error',
-                'error' => 'Request is empty'
+                'errorCode' => 1,
+                'errorDescription' => 'Request is empty'
             ];
         }
         
@@ -58,6 +58,11 @@ class UserController extends ApiController
 
         if($user->findByUseremail($email)){
             $user = $user->findByUseremail($email);
+            return [
+                'status' => false,
+                'errorCode' => 4,
+                'errorDescription' => 'With current email, user already exists'
+            ];
         }
 
         $user->username = $username;
@@ -71,15 +76,21 @@ class UserController extends ApiController
         if ($user->save()) {
             return [
                 'status' => true,
-                'statusCode' => '1',
-                'data' => $user
+                'statusCode' => 2,
+                'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
             ];
         } else {
             
             $errors = $user->getErrors();
             return [
                 'status' => false,
-                'statusCode' => '2',
+                'errorCode' => 3,
                 'errorDescription' => $errors
             ];
         }
@@ -96,14 +107,15 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'statusCode' => '4',
+                'errorCode' => 4,
                 'errorDescription' => 'Request is empty'
             ];
         }
-
+/*
         if ($request->post('username')) {
             $username = $request->post('username');
         }
+        */
         if ($request->post('email')) {
             $email = $request->post('email');
         }
@@ -119,7 +131,7 @@ class UserController extends ApiController
         if(!$user){
             return [
                     'status' => false,
-                    'statusCode' => '5',
+                    'errorCode' => 5,
                     'errorDescription' => 'User not found',
                 ];
         }
@@ -132,14 +144,20 @@ class UserController extends ApiController
             if($user->save()){
                 return [
                     'status' => true,
-                    'statusCode' => '1',
-                    'data' => $user
+                    'statusCode' => 1,
+                    'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
                 ];
             }else{
                 $errors = $user->getErrors();
                 return [
                     'status' => false,
-                    'statusCode' => '2',
+                    'errorCode' => 2,
                     'errorDescription' => 'Not saved in db'.$errors,
                 ];
             }
@@ -149,7 +167,7 @@ class UserController extends ApiController
             $errors = $user->getErrors();
             return [
                 'status' => false,
-                'statusCode' => '3',
+                'errorCode' => 3,
                 'errorDescription' => $errors,
             ];
         }
@@ -165,7 +183,7 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'statusCode' => '4',
+                'statusCode' => 4,
                 'errorDescription' => 'Request is empty'
             ];
         }
@@ -207,7 +225,7 @@ class UserController extends ApiController
                     $errors = $user->getErrors();
                     return [
                         'status' => false,
-                        'statusCode' => '3',
+                        'errorCode' => 3,
                         'errorDescription' => $errors,
                     ];
                 }
@@ -226,14 +244,14 @@ class UserController extends ApiController
                     if($social->save()){
                         return [
                             'status' => true,
-                            'statusCode' => '1',
+                            'statusCode' => 1,
                             'data' => $user
                         ];
                     }else{
                         $errors = $social->getErrors();
                         return [
                             'status' => false,
-                            'statusCode' => '2',
+                            'errorCode' => 2,
                             'errorDescription' => $errors,
                         ];
                     }
@@ -241,7 +259,7 @@ class UserController extends ApiController
                     $errors = $user->getErrors();
                     return [
                         'status' => false,
-                        'statusCode' => '4',
+                        'errorCode' => 4,
                         'errorDescription' => $errors,
                     ];
                 }
@@ -263,7 +281,7 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'statusCode' => '4',
+                'errorCode' => 4,
                 'errorDescription' => 'Request is empty'
             ];
         }
@@ -279,17 +297,121 @@ class UserController extends ApiController
         if($data){
             return [
                 'status' => true,
-                'statusCode' => '1',
+                'statusCode' => 1,
                 'data' => $data
             ];
         }else{
             return [
                 'status' => false,
-                'statusCode' => '2',
+                'errorCode' => 2,
                 'errorDescription' => 'user is not exists',
             ];
         }
         
+
+
+    }
+
+
+    public function actionRagoogle(){
+
+        //for user class
+        $username = null;
+        $email = null;
+        $password_hash = null;
+        $status = User::STATUS_ACTIVE;
+        
+
+        //for social class
+        $user_id = null;
+        $social_net = Social::GOOGLE;
+        $key = null;
+
+        $request = \Yii::$app->request;
+
+        if(!$request->post()){
+            return [
+                'status' => false,
+                'errorCode' => 4,
+                'errorDescription' => 'Request is empty'
+            ];
+        }
+
+        if($request->post('key')){
+            $key = $request->post('key');
+        }
+
+        if ($request->post('email')) {
+            $email = $request->post('email');
+        }
+
+        $social = new Social();
+        $social = $social->findByKey($key);
+        if(!$social){
+            // social user is not exist
+            // create user
+            $user = new User();
+            $user->username = $username;
+            $user->password_hash = '-';
+            $user->email = $email;
+            $user->status = $status;
+            $user->accessToken = $user->generateToken();
+            $user->tokenTime = date_create('now')->format('U');
+            
+
+            if($user->save()){
+                $social = new Social();
+                $social->user_id = $user->id; 
+                $social->social_net = $social_net;
+                $social->key = $key;
+
+                if($social->save()){
+                    return [
+                        'status' => true,
+                        'statusCode' => 1,
+                        'data' => [
+                            'username' => $user->username,
+                            'email' => $user->email,
+                            'status' => $user->status,
+                            'accessToken' => $user->accessToken,
+                            'id' => $user->id,
+                        ]
+                    ];
+                }else{
+                    $errors = $social->getErrors();
+                    return [
+                        'status' => false,
+                        'errorCode' => 2,
+                        'errorDescription' => $errors,
+                    ];
+                }
+            }else{
+                $errors = $user->getErrors();
+                return [
+                    'status' => false,
+                    'errorCode' => 3,
+                    'errorDescription' => $errors,
+                ];
+            }
+        }else{
+            // user exist
+            
+            $user = $social->getUser()->one();
+            return [
+                'status' => true,
+                'statusCode' => 5,
+                'data' => [
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'status' => $user->status,
+                    'accessToken' => $user->accessToken,
+                    'id' => $user->id,
+                ]
+            ];
+        }
+        
+
+
 
 
     }
@@ -326,7 +448,7 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'statusCode' => '4',
+                'errorCode' => 4,
                 'errorDescription' => 'Request is empty'
             ];
         }
@@ -343,21 +465,21 @@ class UserController extends ApiController
                 if($data->save()){
                 return [
                         'status' => true,
-                        'statusCode' => '1',
-                        'data' => $data
+                        'statusCode' => 1,
+                        //'data' => $data
                     ];  
                 }else{
                     $errors = $data->getErrors();
                     return [
                         'status' => false,
-                        'statusCode' => '3',
+                        'errorCode' => 3,
                         'errorDescription' => $errors
                     ];
                 }
             }else{
                 return [
                     'status' => false,
-                    'statusCode' => '2',
+                    'errorCode' => 2,
                     'errorDescription' => 'Token is expired'
                 ];
             }
