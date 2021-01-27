@@ -168,7 +168,7 @@ class UserController extends ApiController
             return [
                 'status' => false,
                 'errorCode' => 3,
-                'errorDescription' => $errors,
+                'errorDescription' => 'Wrong password',
             ];
         }
 
