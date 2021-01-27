@@ -76,7 +76,7 @@ class UserController extends ApiController
         if ($user->save()) {
             return [
                 'status' => true,
-                'statusCode' => 2,
+                'statusCode' => 1,
                 'data' => [
                         'username' => $user->username,
                         'email' => $user->email,
@@ -183,7 +183,7 @@ class UserController extends ApiController
         if(!$request->post()){
             return [
                 'status' => false,
-                'statusCode' => 4,
+                'errorCode' => 4,
                 'errorDescription' => 'Request is empty'
             ];
         }
@@ -397,17 +397,28 @@ class UserController extends ApiController
             // user exist
             
             $user = $social->getUser()->one();
-            return [
-                'status' => true,
-                'statusCode' => 5,
-                'data' => [
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'status' => $user->status,
-                    'accessToken' => $user->accessToken,
-                    'id' => $user->id,
-                ]
-            ];
+
+            if($user->email == $email){
+                return [
+                    'status' => true,
+                    'statusCode' => 1,
+                    'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
+                ];
+            }else{
+                return [
+                    'status' => false,
+                    'errorCode' => 5,
+                    'errorDescription' => 'wrong email',
+                ];
+            }
+
+            
         }
         
 
@@ -458,6 +469,14 @@ class UserController extends ApiController
 
             $user = new User;
             $data = $user::findIdentityByAccessToken($accessToken);
+
+            if(!$data){
+                return [
+                    'status' => false,
+                    'errorCode' => 4,
+                    'errorDescription' => 'Token is not exist'
+                ];
+            }
 
             if(($data->tokenTime + Yii::$app->params['tokenLife']) > date_create('now')->format('U')){
                 $data->tokenTime = date_create('now')->format('U');
