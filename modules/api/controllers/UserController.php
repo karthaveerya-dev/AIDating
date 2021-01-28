@@ -136,6 +136,13 @@ class UserController extends ApiController
                 ];
         }
 
+        if($user->password_hash == '-'){
+            return [
+                'status' => false,
+                'errorCode' => 6,
+                'errorDescription' => 'It is a social user',
+            ];
+        }
         if (Yii::$app->getSecurity()->validatePassword($password, $user->password_hash)) {
 
             $user->accessToken = $user->generateToken();
