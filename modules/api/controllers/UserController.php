@@ -399,17 +399,29 @@ class UserController extends ApiController
             $user = $social->getUser()->one();
 
             if($user->email == $email){
-                return [
-                    'status' => true,
-                    'statusCode' => 1,
-                    'data' => [
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'status' => $user->status,
-                        'accessToken' => $user->accessToken,
-                        'id' => $user->id,
-                    ]
-                ];
+                $user->accessToken = $user->generateToken();
+                $user->tokenTime = date_create('now')->format('U');
+                if($user->save()){
+                    return [
+                        'status' => true,
+                        'statusCode' => 1,
+                        'data' => [
+                            'username' => $user->username,
+                            'email' => $user->email,
+                            'status' => $user->status,
+                            'accessToken' => $user->accessToken,
+                            'id' => $user->id,
+                        ]
+                    ];
+                }else{
+                    $errors = $user->getErrors();
+                    return [
+                        'status' => false,
+                        'errorCode' => 3,
+                        'errorDescription' => $errors,
+                    ];
+                }
+                
             }else{
                 return [
                     'status' => false,
