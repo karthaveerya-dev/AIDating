@@ -343,9 +343,13 @@ class UserController extends ApiController
                 'errorDescription' => 'Request is empty'
             ];
         }
-
+/*
         if($request->post('key')){
             $key = $request->post('key');
+        }
+*/
+        if($request->post('token')){
+            $key = $request->post('token');
         }
 
         if(!$key){
