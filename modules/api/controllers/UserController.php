@@ -49,7 +49,7 @@ class UserController extends ApiController
             $username = $request->post('username');
         }
         if ($request->post('email')) {
-            $email = $request->post('email');
+            $email = strtolower($request->post('email'));
         }
         if ($request->post('password')) {
             $hash = Yii::$app->getSecurity()->generatePasswordHash($request->post('password')); 
@@ -117,7 +117,7 @@ class UserController extends ApiController
         }
         */
         if ($request->post('email')) {
-            $email = $request->post('email');
+            $email = strtolower($request->post('email'));
         }
         if ($request->post('password')) {
             $password = $request->post('password');
@@ -182,7 +182,7 @@ class UserController extends ApiController
     }
 
 /*google*/
-
+/*
     public function actionReggoogle(){
 
         $request = \Yii::$app->request;
@@ -318,7 +318,7 @@ class UserController extends ApiController
 
 
     }
-
+*/
 
     public function actionRagoogle(){
 
@@ -357,7 +357,7 @@ class UserController extends ApiController
         }
 
         if ($request->post('email')) {
-            $email = $request->post('email');
+            $email = strtolower($request->post('email'));
         }
 
         $social = new Social();
@@ -498,7 +498,7 @@ class UserController extends ApiController
         }
 
         if ($request->post('email')) {
-            $email = $request->post('email');
+            $email = strtolower($request->post('email'));
         }
 
         $social = new Social();
