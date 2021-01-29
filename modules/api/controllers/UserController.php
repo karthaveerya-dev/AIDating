@@ -348,6 +348,14 @@ class UserController extends ApiController
             $key = $request->post('key');
         }
 
+        if(!$key){
+            return [
+                'status' => false,
+                'errorCode' => 2,
+                'errorDescription' => 'GoogleKey - is empty',
+            ];
+        }
+
         if ($request->post('email')) {
             $email = $request->post('email');
         }
@@ -472,9 +480,21 @@ class UserController extends ApiController
                 'errorDescription' => 'Request is empty'
             ];
         }
-
+/*
         if($request->post('key')){
             $key = $request->post('key');
+        }
+*/
+        if($request->post('userID')){
+            $key = $request->post('userID');
+        }
+
+        if(!$key){
+            return [
+                'status' => false,
+                'errorCode' => 2,
+                'errorDescription' => 'userID - is empty',
+            ];
         }
 
         if ($request->post('email')) {
