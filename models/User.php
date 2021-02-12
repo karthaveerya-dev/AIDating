@@ -141,6 +141,9 @@ class User extends \yii\db\ActiveRecord
         return $token;
     }
 
-    
+    public static function findById($user_id)
+    {
+        return static::findOne(['id' => $user_id]);        
+    }  
 
 }

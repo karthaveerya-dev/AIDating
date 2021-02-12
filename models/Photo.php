@@ -5,28 +5,25 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "user_social".
+ * This is the model class for table "photo".
  *
  * @property int $id
  * @property int $user_id
- * @property string $social_net
- * @property string $key
+ * @property string|null $photo_path
  *
  * @property User $user
  */
-class Social extends \yii\db\ActiveRecord
+class Photo extends \yii\db\ActiveRecord
 {
 
-    const FACEBOOK = 'facebook';
-    const GOOGLE = 'google';
-
+    public $photo;
 
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'user_social';
+        return 'photo';
     }
 
     /**
@@ -35,11 +32,11 @@ class Social extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'social_net', 'key'], 'required'],
+            [['user_id'], 'required'],
             [['user_id'], 'integer'],
-            [['social_net', 'key'], 'string', 'max' => 8000],
+            [['photo_path'], 'string', 'max' => 255],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
-            ['key', 'unique'],
+            [['photo'], 'safe'],
         ];
     }
 
@@ -51,8 +48,7 @@ class Social extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
-            'social_net' => 'Social Net',
-            'key' => 'Key',
+            'photo_path' => 'Photo Path',
         ];
     }
 
@@ -65,11 +61,4 @@ class Social extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
-
-    public static function findByKey($key)
-    {
-        return static::findOne(['key' => $key]);
-    } 
-
-
 }

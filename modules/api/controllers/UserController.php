@@ -182,143 +182,7 @@ class UserController extends ApiController
     }
 
 /*google*/
-/*
-    public function actionReggoogle(){
 
-        $request = \Yii::$app->request;
-
-        if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'Request is empty'
-            ];
-        }
-
-        //for user class        
-        $username = null;
-        $email = null;
-        $password_hash = null;
-        $status = User::STATUS_ACTIVE;
-        
-
-        //for social class
-        $user_id = null;
-        $social_net = Social::GOOGLE;
-        $key = null;
-
-    
-        $user = new User();
-        $social = new Social();
-        //isset current email        
-
-        if ($request->post('email')) {
-            $email = $request->post('email');
-            $user = $user->findByUseremail($email);
-            
-            //$user->accessToken = $user->generateToken();
-            //$user->tokenTime = date_create('now')->format('U');
-
-            if(!$user){
-                $user = new User();
-                $user->email = $email;
-                $user->password_hash = '-';
-                $user->status = $status;
-                $user->accessToken = $user->generateToken();
-                $user->tokenTime = date_create('now')->format('U');
-                if($user->save(false)){
-                    
-                }else{
-                    $errors = $user->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 3,
-                        'errorDescription' => $errors,
-                    ];
-                }
-            }
-            
-            $social->user_id = $user->id;
-            $social->social_net = $social_net;
-            
-            if($request->post('key')){
-                $key = $request->post('key');
-                $social->key = $key;
-
-                $user->accessToken = $user->generateToken();
-                $user->tokenTime = date_create('now')->format('U');
-                if($user->save()){
-                    if($social->save()){
-                        return [
-                            'status' => true,
-                            'statusCode' => 1,
-                            'data' => $user
-                        ];
-                    }else{
-                        $errors = $social->getErrors();
-                        return [
-                            'status' => false,
-                            'errorCode' => 2,
-                            'errorDescription' => $errors,
-                        ];
-                    }
-                }else{
-                    $errors = $user->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 4,
-                        'errorDescription' => $errors,
-                    ];
-                }
-                
-            }
-                     
-        }
-
-
-
-
-    }
-
-
-    public function actionAuthgoogle(){
-        
-        $request = \Yii::$app->request;
-
-        if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'Request is empty'
-            ];
-        }
-
-        if($request->post('key')){
-            $key = $request->post('key');
-        }
-
-        $social = new Social();
-        $social = $social->findByKey($key);
-        $data = $social->getUser()->one();
-
-        if($data){
-            return [
-                'status' => true,
-                'statusCode' => 1,
-                'data' => $data
-            ];
-        }else{
-            return [
-                'status' => false,
-                'errorCode' => 2,
-                'errorDescription' => 'user is not exists',
-            ];
-        }
-        
-
-
-    }
-*/
 
     public function actionRagoogle(){
 
@@ -343,32 +207,29 @@ class UserController extends ApiController
                 'errorDescription' => 'Request is empty'
             ];
         }
-/*
-        if($request->post('key')){
-            $key = $request->post('key');
-        }
-*/
+
         if($request->post('token')){
             $key = $request->post('token');
-        }
-
-        if(!$key){
-            return [
-                'status' => false,
-                'errorCode' => 2,
-                'errorDescription' => 'GoogleKey - is empty',
-            ];
         }
 
         if ($request->post('email')) {
             $email = strtolower($request->post('email'));
         }
 
-        $social = new Social();
-        $social = $social->findByKey($key);
-        if(!$social){
-            // social user is not exist
-            // create user
+        if(!$email){
+            return [
+                'status' => false,
+                'errorCode' => 2,
+                'errorDescription' => 'Email - is empty',
+            ];
+        }
+
+
+        $user = new User();
+        $user = $user->findByUseremail($email);
+
+        if(!$user){
+            //create new
             $user = new User();
             $user->username = $username;
             $user->password_hash = '-';
@@ -376,7 +237,6 @@ class UserController extends ApiController
             $user->status = $status;
             $user->accessToken = $user->generateToken();
             $user->tokenTime = date_create('now')->format('U');
-            
 
             if($user->save()){
                 $social = new Social();
@@ -412,51 +272,34 @@ class UserController extends ApiController
                     'errorDescription' => $errors['email'][0],
                 ];
             }
-        }else{
-            // user exist
-            
-            $user = $social->getUser()->one();
 
-            if($user->email == $email){
-                $user->accessToken = $user->generateToken();
-                $user->tokenTime = date_create('now')->format('U');
-                if($user->save()){
-                    return [
-                        'status' => true,
-                        'statusCode' => 1,
-                        'data' => [
-                            'username' => $user->username,
-                            'email' => $user->email,
-                            'status' => $user->status,
-                            'accessToken' => $user->accessToken,
-                            'id' => $user->id,
-                        ]
-                    ];
-                }else{
-                    $errors = $user->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 3,
-                        'errorDescription' => $errors,
-                    ];
-                }
-                
+        }else{
+            $user->accessToken = $user->generateToken();
+            $user->tokenTime = date_create('now')->format('U');
+            if($user->save()){
+                return [
+                    'status' => true,
+                    'statusCode' => 1,
+                    'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
+                ];
             }else{
+                $errors = $user->getErrors();
                 return [
                     'status' => false,
-                    'errorCode' => 5,
-                    'errorDescription' => 'wrong email',
+                    'errorCode' => 3,
+                    'errorDescription' => 'error on save user',
                 ];
             }
-
-            
         }
-        
-
-
-
-
     }
+
+  
 
 /*facebook*/
 
@@ -663,7 +506,7 @@ class UserController extends ApiController
 
 
 
-
+/*-----PROFILE-----*/
 
 
 
