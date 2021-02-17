@@ -139,7 +139,7 @@ class ProfileController extends ApiController
 		        	}
 
 		        }else{
-		        	$profile->user_id = $user_id;
+		        	$profile->user_id = $user->id;
 		        	$profile->location = $location;
 		        	$profile->distance_from = $distance_from;
 		        	$profile->distance_to = $distance_to;
