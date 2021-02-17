@@ -42,9 +42,13 @@ class ProfileController extends ApiController
     
     	$user = new User();
 		$profile = new Profile();
-    
-		if ($request->post('accessToken')) {
-            $accessToken = $request->post('accessToken');
+    //var_dump($request->headers['accessToken']);die;
+
+		// if ($request->post('accessToken')) {
+  //           $accessToken = $request->post('accessToken');
+
+        if ($request->headers['accessToken']) {
+            $accessToken = $request->headers['accessToken'];    
 
             $user = $user->findByToken($accessToken);
 //var_dump($user);die;
@@ -181,7 +185,7 @@ class ProfileController extends ApiController
         	return [
                 'status' => false,
                 'errorCode' => 1,
-                'errorDescription' => 'User_id is empty'
+                'errorDescription' => 'accessToken is empty'
             ];
         }
 

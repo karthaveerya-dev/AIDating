@@ -22,17 +22,27 @@ class PhotoController extends ApiController
     public function actionSaveFile()
     {
         $request = \Yii::$app->request;
-
+		/*
         if(!$request->post()){
             return [
                 'status' => false,
                 'errorCode' => 1,
                 'errorDescription' => 'Request is empty'
             ];
-        }
-
+        }*/
+		/*
         if ($request->post('accessToken')) {
             $accessToken = $request->post('accessToken');
+        }*/
+
+        if ($request->headers['accessToken']) {
+            $accessToken = $request->headers['accessToken'];  
+        }else{
+        	return [
+                'status' => false,
+                'errorCode' => 1,
+                'errorDescription' => 'accessToken is empty'
+            ];
         }
 
         /*--------------------*/
