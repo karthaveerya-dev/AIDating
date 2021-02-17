@@ -146,4 +146,10 @@ class User extends \yii\db\ActiveRecord
         return static::findOne(['id' => $user_id]);        
     }  
 
+    public static function findByToken($accessToken)
+    {
+        return static::findOne(['accessToken' => $accessToken]);        
+    }  
+    
+
 }

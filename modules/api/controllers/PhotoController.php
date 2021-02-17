@@ -31,8 +31,8 @@ class PhotoController extends ApiController
             ];
         }
 
-        if ($request->post('user_id')) {
-            $user_id = $request->post('user_id');
+        if ($request->post('accessToken')) {
+            $accessToken = $request->post('accessToken');
         }
 
         /*--------------------*/
@@ -46,15 +46,27 @@ class PhotoController extends ApiController
 				$model = new Photo();
 
 				$user = new User();
-				if(!$user->findById($user_id)){
+				if(!$user->findByToken($accessToken)){
 					return [
 		                'status' => false,
 		                'errorCode' => 3,
 		                'errorDescription' => 'User not found'
 		            ];
+				}else{
+					$user = $user->findByToken($accessToken);
 				}
-		    	$model->user_id = $user_id;
-		        
+		    	$model->user_id = $user->id;
+		    	//var_dump($user);die;
+		        if(($user->tokenTime + Yii::$app->params['tokenLife']) > date_create('now')->format('U'))
+	            {
+	                $user->tokenTime = date_create('now')->format('U');
+	            }else{
+	                return [
+	                    'status' => false,
+	                    'errorCode' => 5,
+	                    'errorDescription' => 'Token is expired'
+	                ];
+	            }
 		        $transaction = \Yii::$app->db->beginTransaction();
 
 		        try {

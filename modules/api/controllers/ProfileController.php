@@ -43,13 +43,33 @@ class ProfileController extends ApiController
     	$user = new User();
 		$profile = new Profile();
     
-		if ($request->post('user_id')) {
-            $user_id = $request->post('user_id');
+		if ($request->post('accessToken')) {
+            $accessToken = $request->post('accessToken');
 
-            $user = $user->findById($user_id);
+            $user = $user->findByToken($accessToken);
 //var_dump($user);die;
-            $user_profile = $profile->findById($user_id);
+            if(!$user){
+            	return [
+	                'status' => false,
+	                'errorCode' => 4,
+	                'errorDescription' => 'User not found'
+	            ];
+            }
 
+            if(($user->tokenTime + Yii::$app->params['tokenLife']) > date_create('now')->format('U'))
+            {
+                $user->tokenTime = date_create('now')->format('U');
+            }else{
+                return [
+                    'status' => false,
+                    'errorCode' => 5,
+                    'errorDescription' => 'Token is expired'
+                ];
+            }
+
+
+            $user_profile = $profile->findById($user->id);
+//var_dump($user_profile);die;
             if ($request->post('username')) {
 	            $username = $request->post('username');
 	        }
