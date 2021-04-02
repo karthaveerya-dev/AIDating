@@ -11,6 +11,8 @@ use Yii;
  * @property int $user_id
  * @property string $social_net
  * @property string $key
+ * @property string $social_token
+ * @property enum $token_status
  *
  * @property User $user
  */
@@ -40,6 +42,9 @@ class Social extends \yii\db\ActiveRecord
             [['social_net', 'key'], 'string', 'max' => 8000],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
             ['key', 'unique'],
+            [['social_token'], 'string'],            
+            ['token_status', 'in', 'range' => [0, 1]],
+            ['token_status', 'default', 'value' => 0],
         ];
     }
 
@@ -71,5 +76,9 @@ class Social extends \yii\db\ActiveRecord
         return static::findOne(['key' => $key]);
     } 
 
-
+    public static function findBySocialToken($social_token)
+    {
+        return static::findOne(['social_token' => $social_token]);
+    }
+    
 }

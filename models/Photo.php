@@ -61,4 +61,15 @@ class Photo extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
+
+
+
+
+    public static function findById($user_id)
+    {
+        return static::findOne(['user_id' => $user_id]);        
+    }    
+
+
+    
 }

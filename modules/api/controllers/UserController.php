@@ -4,6 +4,8 @@ namespace app\modules\api\controllers;
 
 use app\models\User;
 use app\models\Social;
+use app\models\Profile;
+use app\models\Photo;
 use app\modules\api\components\ApiController;
 use Yii;
 
@@ -24,16 +26,136 @@ class UserController extends ApiController
         ];
     }
 
+    protected function postEmpty() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->postEmptyCode(),
+            "errorDescription" => Yii::$app->respStandarts->postEmptyDesc()
+        ];
+    }
+
+    protected function userExistEmail() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->userExistEmailCode(),
+            "errorDescription" => Yii::$app->respStandarts->userExistEmailDesc()
+        ];
+    }
+
+    protected function userWithoutProfile($user) {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => true,
+            "statusCode" => Yii::$app->respStandarts->userWithoutProfileCode(),
+            'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
+        ];
+    }
+
+    protected function userWithProfile($user) {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => true,
+            "statusCode" => Yii::$app->respStandarts->userWithProfileCode(),
+            'data' => [
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'accessToken' => $user->accessToken,
+                        'id' => $user->id,
+                    ]
+        ];
+    }   
+    
+    protected function userSocialData($social) {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => true,
+            "statusCode" => Yii::$app->respStandarts->userSocialDataCode(),
+            'data' => [
+                        'social_net' => $social->social_net,
+                        'social_token' => $social->social_token,
+                        'token_status' => $social->token_status,
+                    ]
+        ];
+    }     
+
+    protected function errorOnSave() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->errorOnSaveCode(),
+            "errorDescription" => Yii::$app->respStandarts->errorOnSaveDesc()
+        ];
+    }
+
+    protected function userNotFound() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->userNotFoundCode(),
+            "errorDescription" => Yii::$app->respStandarts->userNotFoundDesc()
+        ];
+    }
+
+    protected function socialAccUser() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->socialAccUserCode(),
+            "errorDescription" => Yii::$app->respStandarts->socialAccUserDesc()
+        ];
+    }
+
+    protected function wrongPassword() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->wrongPasswordCode(),
+            "errorDescription" => Yii::$app->respStandarts->wrongPasswordDesc()
+        ];
+    }
+
+    protected function emailEmpty() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->emailEmptyCode(),
+            "errorDescription" => Yii::$app->respStandarts->emailEmptyDesc()
+        ];
+    }
+
+    protected function userFbIdEmpty() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->userFbIdEmptyCode(),
+            "errorDescription" => Yii::$app->respStandarts->userFbIdEmptyDesc()
+        ];
+    }
+
+    protected function userSocialTokenEmpty() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->userSocialTokenEmptyCode(),
+            "errorDescription" => Yii::$app->respStandarts->userSocialTokenEmptyDesc()
+        ];
+    }
+
+    protected function userSocialEmpty() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->userSocialEmptyCode(),
+            "errorDescription" => Yii::$app->respStandarts->userSocialEmptyDesc()
+        ];
+    }
+
+
+
+
+
     public function actionRegistration()
     {
         $request = \Yii::$app->request;
 
         if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 1,
-                'errorDescription' => 'Request is empty'
-            ];
+            return $this->postEmpty();
         }
         
         $username = null;
@@ -58,11 +180,7 @@ class UserController extends ApiController
 
         if($user->findByUseremail($email)){
             $user = $user->findByUseremail($email);
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'With current email, user already exists'
-            ];
+            return $this->userExistEmail();            
         }
 
         $user->username = $username;
@@ -74,25 +192,9 @@ class UserController extends ApiController
         
         
         if ($user->save()) {
-            return [
-                'status' => true,
-                'statusCode' => 1,
-                'data' => [
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'status' => $user->status,
-                        'accessToken' => $user->accessToken,
-                        'id' => $user->id,
-                    ]
-            ];
+            return $this->userWithoutProfile($user);            
         } else {
-            
-            $errors = $user->getErrors();
-            return [
-                'status' => false,
-                'errorCode' => 3,
-                'errorDescription' => $errors
-            ];
+            return $this->errorOnSave();
         }
 
 
@@ -105,17 +207,9 @@ class UserController extends ApiController
         $request = \Yii::$app->request;
 
         if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'Request is empty'
-            ];
+            return $this->postEmpty();
         }
-/*
-        if ($request->post('username')) {
-            $username = $request->post('username');
-        }
-        */
+
         if ($request->post('email')) {
             $email = strtolower($request->post('email'));
         }
@@ -129,54 +223,32 @@ class UserController extends ApiController
         $user = $user->findByUseremail($email);
 
         if(!$user){
-            return [
-                    'status' => false,
-                    'errorCode' => 5,
-                    'errorDescription' => 'User not found',
-                ];
+            return $this->userNotFound();
         }
 
         if($user->password_hash == '-'){
-            return [
-                'status' => false,
-                'errorCode' => 6,
-                'errorDescription' => 'It is a social user',
-            ];
+            return $this->socialAccUser();            
         }
+
         if (Yii::$app->getSecurity()->validatePassword($password, $user->password_hash)) {
 
             $user->accessToken = $user->generateToken();
             $user->tokenTime = date_create('now')->format('U');
 
-            if($user->save()){
-                return [
-                    'status' => true,
-                    'statusCode' => 1,
-                    'data' => [
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'status' => $user->status,
-                        'accessToken' => $user->accessToken,
-                        'id' => $user->id,
-                    ]
-                ];
+            if($user->save(false)){
+
+                if(Profile::findById($user->id) && Photo::findById($user->id)){
+                    return $this->userWithProfile($user);                    
+                }else{
+                    return $this->userWithoutProfile($user);
+                }
+                
             }else{
-                $errors = $user->getErrors();
-                return [
-                    'status' => false,
-                    'errorCode' => 2,
-                    'errorDescription' => 'Not saved in db'.$errors,
-                ];
+                return $this->errorOnSave();
             }
             
         } else {
-            
-            $errors = $user->getErrors();
-            return [
-                'status' => false,
-                'errorCode' => 3,
-                'errorDescription' => 'Wrong password',
-            ];
+            return $this->wrongPassword();
         }
 
     }
@@ -201,11 +273,7 @@ class UserController extends ApiController
         $request = \Yii::$app->request;
 
         if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'Request is empty'
-            ];
+            return $this->postEmpty();
         }
 
         if($request->post('token')){
@@ -217,11 +285,7 @@ class UserController extends ApiController
         }
 
         if(!$email){
-            return [
-                'status' => false,
-                'errorCode' => 2,
-                'errorDescription' => 'Email - is empty',
-            ];
+            return $this->emailEmpty();
         }
 
 
@@ -245,56 +309,26 @@ class UserController extends ApiController
                 $social->key = $key;
 
                 if($social->save()){
-                    return [
-                        'status' => true,
-                        'statusCode' => 1,
-                        'data' => [
-                            'username' => $user->username,
-                            'email' => $user->email,
-                            'status' => $user->status,
-                            'accessToken' => $user->accessToken,
-                            'id' => $user->id,
-                        ]
-                    ];
+                    return $this->userWithoutProfile($user);
                 }else{
-                    $errors = $social->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 2,
-                        'errorDescription' => 'Error on save social user',
-                    ];
+                    return $this->errorOnSave();
                 }
             }else{
-                $errors = $user->getErrors();
-                return [
-                    'status' => false,
-                    'errorCode' => 3,
-                    'errorDescription' => $errors['email'][0],
-                ];
+                return $this->errorOnSave();
             }
 
         }else{
             $user->accessToken = $user->generateToken();
             $user->tokenTime = date_create('now')->format('U');
             if($user->save()){
-                return [
-                    'status' => true,
-                    'statusCode' => 1,
-                    'data' => [
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'status' => $user->status,
-                        'accessToken' => $user->accessToken,
-                        'id' => $user->id,
-                    ]
-                ];
+                if(Profile::findById($user->id) && Photo::findById($user->id)){
+                    return $this->userWithProfile($user);
+                }else{
+                    return $this->userWithoutProfile($user);
+                }
+                
             }else{
-                $errors = $user->getErrors();
-                return [
-                    'status' => false,
-                    'errorCode' => 3,
-                    'errorDescription' => 'error on save user',
-                ];
+                return $this->errorOnSave();
             }
         }
     }
@@ -321,27 +355,15 @@ class UserController extends ApiController
         $request = \Yii::$app->request;
 
         if(!$request->post()){
-            return [
-                'status' => false,
-                'errorCode' => 4,
-                'errorDescription' => 'Request is empty'
-            ];
+            return $this->postEmpty();
         }
-/*
-        if($request->post('key')){
-            $key = $request->post('key');
-        }
-*/
+
         if($request->post('userID')){
             $key = $request->post('userID');
         }
 
         if(!$key){
-            return [
-                'status' => false,
-                'errorCode' => 2,
-                'errorDescription' => 'userID - is empty',
-            ];
+            return $this->userFbIdEmpty();
         }
 
         if ($request->post('email')) {
@@ -369,32 +391,21 @@ class UserController extends ApiController
                 $social->key = $key;
 
                 if($social->save()){
-                    return [
-                        'status' => true,
-                        'statusCode' => 1,
-                        'data' => [
-                            'username' => $user->username,
-                            'email' => $user->email,
-                            'status' => $user->status,
-                            'accessToken' => $user->accessToken,
-                            'id' => $user->id,
-                        ]
-                    ];
+                    if(Profile::findById($user->id) && Photo::findById($user->id)){
+                        return $this->userWithProfile($user);
+                        
+                    }else{
+                        return $this->userWithoutProfile($user);
+                        
+                    }
+                    
                 }else{
-                    $errors = $social->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 2,
-                        'errorDescription' => 'Error on save social user',
-                    ];
+                    return $this->errorOnSave();
+                    
                 }
             }else{
-                $errors = $user->getErrors();
-                return [
-                    'status' => false,
-                    'errorCode' => 3,
-                    'errorDescription' => $errors['email'][0],
-                ];
+                return $this->errorOnSave();
+                
             }
         }else{
             // user exist
@@ -405,49 +416,95 @@ class UserController extends ApiController
                 $user->accessToken = $user->generateToken();
                 $user->tokenTime = date_create('now')->format('U');
                 if($user->save()){
-                    return [
-                        'status' => true,
-                        'statusCode' => 1,
-                        'data' => [
-                            'username' => $user->username,
-                            'email' => $user->email,
-                            'status' => $user->status,
-                            'accessToken' => $user->accessToken,
-                            'id' => $user->id,
-                        ]
-                    ];
+                    if(Profile::findById($user->id) && Photo::findById($user->id)){
+                        return $this->userWithProfile($user);
+                        
+                    }else{
+                        return $this->userWithoutProfile($user);
+                        
+                    }
+                    
                 }else{
-                    $errors = $user->getErrors();
-                    return [
-                        'status' => false,
-                        'errorCode' => 3,
-                        'errorDescription' => $errors,
-                    ];
+                    return $this->errorOnSave();
+                    
                 }
-                
-            /*}else{
-                return [
-                    'status' => false,
-                    'errorCode' => 5,
-                    'errorDescription' => 'wrong email',
-                ];
-            }*/
-
-            
         }
-
-
     }
 
 
 /*-----------------------------*/
 
 
+    public function actionSaveSocialToken()
+    {
+        $request = \Yii::$app->request;
+        
+        if($request->post('userID')){
+            $key = $request->post('userID');
+        }
 
+        if(!$key){
+            return $this->userFbIdEmpty();
+        }
+        
+        if($request->post('social_token')){
+            $social_token = $request->post('social_token');
+        }
+        
+        if(!$social_token){
+            return $this->userSocialTokenEmpty();
+        }
+        
+        $social = new Social();
+        $social = $social->findByKey($key);
+        
+        if(!$social){
+            return $this->userSocialEmpty();
+        }else{
+            $social->social_token = $social_token;
+            $social->token_status = 1;
+            if($social->save()){
+                return [
+                    Yii::$app->respStandarts->getSuccessKeyWord() => true,
+                    "statusCode" => Yii::$app->respStandarts->userSocialCode(),
+                    
+                ];
+            }else{
+                return $this->errorOnSave();
+            }
+        }
+        
+        
+        
+    }
 
+/*---------------------------------*/
+    
+    public function actionCheckSocialToken()
+    {
+        $request = \Yii::$app->request;
+        
+        if($request->post('social_token')){
+            $social_token = $request->post('social_token');
+        }
+        
+        if(!$social_token){
+            return $this->userSocialTokenEmpty();
+        }
+        
+        $social = new Social();
+        $social = $social->findBySocialToken($social_token);
+        
+        if(!$social){
+            return $this->userSocialEmpty();
+        }else{
+            return $this->userSocialData($social);
+        }
+        
+    }
+    
 
-
-
+/*---------------------------------*/
 
 /*check token and renew token lifetime*/
 

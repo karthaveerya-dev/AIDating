@@ -5,5 +5,5 @@ return [
     'senderEmail' => 'noreply@example.com',
     'senderName' => 'Example.com mailer',
     'tokenLife' => '6000',
-
+	'successResponseKeyWord' => "status", 
 ];

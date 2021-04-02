@@ -75,6 +75,9 @@ $config = [
             //'csrfParam' => '_csrf-basic',
             'baseUrl' => ''
         ],
+        'respStandarts' => [
+            'class' => 'app\components\ResponseSuccess',
+        ],
         
     ],
     'params' => $params,

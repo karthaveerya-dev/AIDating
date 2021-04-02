@@ -41,7 +41,8 @@ class User extends \yii\db\ActiveRecord
             [['status'], 'integer'],
             [['created_date', 'updated_date', 'tokenTime'], 'safe'],
             [['username', 'email', 'accessToken', 'password_hash'], 'string', 'max' => 255],
-            [['username','email'], 'unique'],
+            [['email'], 'email'],
+            [['email'], 'unique'],
         ];
     }
 
@@ -122,9 +123,10 @@ class User extends \yii\db\ActiveRecord
      */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
+        $users = self::find()->indexBy('id')->all();
+        foreach ($users as $user) {
+            if ($user['username'] === $username) {
+                return $username;
             }
         }
 
