@@ -76,6 +76,16 @@ class Social extends \yii\db\ActiveRecord
         return static::findOne(['key' => $key]);
     } 
 
+    public static function findByUserId($id)
+    {
+        return static::findOne(['user_id' => $id]);
+    }
+    
+    public static function findByUserIdAndSocNet($id, $social_net)
+    {
+        return static::findOne(['user_id' => $id, 'social_net' => $social_net]);
+    }     
+    
     public static function findBySocialToken($social_token)
     {
         return static::findOne(['social_token' => $social_token]);

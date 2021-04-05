@@ -26,6 +26,9 @@ class ResponseSuccess extends Component {
     private $userFbIdEmptyCode = 8;
     private $userSocialTokenEmptyCode = 9;
     private $userSocialEmptyCode = 10;
+    private $userSocialNetEmptyCode = 11;
+    private $userIdEmptyCode = 12;
+    private $userSocialKeyEmptyCode = 13;
 
     
     //success codes
@@ -45,6 +48,9 @@ class ResponseSuccess extends Component {
     private $userFbIdEmptyDesc = 'UserID FB is empty';
     private $userSocialTokenEmptyDesc = 'User social token is empty';
     private $userSocialEmptyDesc = 'Current social user is not exist';
+    private $userSocialNetEmptyDesc = 'Social Net is empty';
+    private $userIdEmptyDesc = 'User ID is empty';
+    private $userSocialKeyEmptyDesc = 'Social User Key (fb or google inner ID or key) is empty';
     
 
     //success descriptions
@@ -149,6 +155,29 @@ class ResponseSuccess extends Component {
         return $this->userSocialDataCode;
     }
 
+    /**
+     *  @return integer  error code
+     */
+    public function userSocialNetEmptyCode() {
+        return $this->userSocialNetEmptyCode;
+    }
+        
+     /**
+     *  @return integer  error code
+     */
+    public function userIdEmptyCode() {
+        return $this->userIdEmptyCode;
+    }   
+
+     /**
+     *  @return integer  error code
+     */
+    public function userSocialKeyEmptyCode() {
+        return $this->userSocialKeyEmptyCode;
+    }     
+    
+    
+    
 }
 
 ?>
