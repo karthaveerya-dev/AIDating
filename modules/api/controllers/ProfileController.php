@@ -11,6 +11,50 @@ use Yii;
 
 class ProfileController extends ApiController
 {
+    
+    protected function profileNotFound() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->profileNotFoundCode(),
+            "errorDescription" => Yii::$app->respStandarts->profileNotFoundDesc()
+        ];
+    }
+
+    protected function getUserProfile($profile, $username) {
+        if($profile->sex === 'male'){
+            $profile->sex = 0;
+        }else{
+            $profile->sex = 1;
+        }
+        
+        if($profile->distance_from == null)
+        {
+            $profile->distance_from = 0;
+        }
+        if($profile->distance_to == null)
+        {
+            $profile->distance_to = 0;
+        }
+        
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => true,
+            "statusCode" => Yii::$app->respStandarts->getUserProfileCode(),
+            'data' => [
+                "id" => $profile->id,
+                "user_id" => $profile->user_id,
+                "user_name" => $username,
+                "location" => $profile->location,
+                "distance_to" => $profile->distance_to,
+                "distance_from" => $profile->distance_from,
+                "sex" => $profile->sex,
+                "age_from" => $profile->age_from,
+                "age_to" => $profile->age_to,
+                "coord_lat" => $profile->coord_lat,
+                "coord_lon" => $profile->coord_lon,
+            ]
+        ];
+    }
+    
     public function actionIndex()
     {
         return [
@@ -19,6 +63,33 @@ class ProfileController extends ApiController
         ];
     }
 
+    public function actionGetProfile()
+    {
+        $request = \Yii::$app->request;
+        
+        if ($request->headers['accessToken']) {
+            $accessToken = $request->headers['accessToken'];    
+
+            $user = User::findByToken($accessToken);
+            if(!$user){
+            	return [
+	                'status' => false,
+	                'errorCode' => 4,
+	                'errorDescription' => 'User not found'
+	            ];
+            }
+            
+            $profile = Profile::findById($user->id);
+            
+            if(!$profile){
+                return $this->profileNotFound();
+            }
+            
+            return $this->getUserProfile($profile, $user->username);
+        }
+        
+    }
+    
     public function actionSaveProfile()
     {
         $request = \Yii::$app->request;
@@ -35,7 +106,7 @@ class ProfileController extends ApiController
         $location = null;
         $distance_from = null;
         $distance_to = null;
-        $sex = 'male';
+        //var_dump($request->post('sex'));
         $age_from = null;
         $age_to = null;
         $coord_lat = null;
@@ -89,11 +160,20 @@ class ProfileController extends ApiController
 	        if ($request->post('distance_to')) {
 	            $distance_to = $request->post('distance_to');
 	        }
-
-	        if ($request->post('sex')) {
-	            $sex = $request->post('sex');
+//var_dump($request->post('sex'));
+	        if ($request->post('sex') !== '') { 
+//                    echo 'insert';
+	            $sexx = $request->post('sex'); 
+//                    var_dump($sex);
+                    
+                    if($sexx == '1'){
+                        $sex = 'female';
+                    }else{
+                        $sex = 'male';
+                    }
+                    
 	        }
-
+//var_dump($sex);die; 
 	        if ($request->post('age_from')) {
 	            $age_from = $request->post('age_from');
 	        }
@@ -117,6 +197,7 @@ class ProfileController extends ApiController
 	        if ($user->save(false)) {
 	            
 	        	if($user_profile){
+                                                 
 		        	$user_profile->location = $location;
 		        	$user_profile->distance_from = $distance_from;
 		        	$user_profile->distance_to = $distance_to;

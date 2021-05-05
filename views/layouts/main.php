@@ -1,5 +1,5 @@
 <?php
-
+die;
 /* @var $this \yii\web\View */
 /* @var $content string */
 

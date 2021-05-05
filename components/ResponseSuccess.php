@@ -30,14 +30,17 @@ class ResponseSuccess extends Component {
     private $userIdEmptyCode = 12;
     private $userSocialKeyEmptyCode = 13;
     private $userAccessTokenEmptyCode = 14;
+    private $profileNotFoundCode = 15;
+    private $socAccUsedCode = 16;
 
     
     //success codes
     private $userWithProfileCode = 1;
     private $userWithoutProfileCode = 2;
-    private $userSocialCode = 3;
-    private $userSocialDataCode = 4;
-    private $userSocialPermissionCode = 5;
+    private $userSocialCode = 1;
+    private $userSocialDataCode = 1;
+    private $userSocialPermissionCode = 1;
+    private $getUserProfileCode = 1;
 
     //error descriptions
     private $postEmptyDesc = 'POST is empty';
@@ -54,6 +57,8 @@ class ResponseSuccess extends Component {
     private $userIdEmptyDesc = 'User ID is empty';
     private $userSocialKeyEmptyDesc = 'Social User Key (fb or google inner ID or key) is empty';
     private $userAccessTokenEmptyDesc = 'Access token - empty';
+    private $profileNotFoundDesc = 'Profile not found';
+    private $socAccUsedDesc = 'This social account is busy';
 
     //success descriptions
     //private $postEmptyDescdd = '';
@@ -191,6 +196,20 @@ class ResponseSuccess extends Component {
     public function userAccessTokenEmptyCode() {
         return $this->userAccessTokenEmptyCode;
     } 
+    
+    /**
+    *  @return integer  error code
+    */
+    public function profileNotFoundCode() {
+        return $this->profileNotFoundCode;
+    } 
+   
+    /**
+    *  @return integer  error code
+    */
+    public function socAccUsedCode() {
+        return $this->socAccUsedCode;
+    }  
     
     
 }

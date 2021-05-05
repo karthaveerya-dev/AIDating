@@ -34,6 +34,14 @@ class UserController extends ApiController
         ];
     }
 
+    protected function socAccUsed() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => false,
+            "errorCode" => Yii::$app->respStandarts->socAccUsedCode(),
+            "errorDescription" => Yii::$app->respStandarts->socAccUsedDesc()
+        ];
+    }
+        
     protected function userExistEmail() {
         return [
             Yii::$app->respStandarts->getSuccessKeyWord() => false,
@@ -71,6 +79,12 @@ class UserController extends ApiController
     }   
     
     protected function userSocialData($social) {
+        if($social->token_status == '0'){
+            $token_status = false;
+        }
+        if($social->token_status == '1'){
+            $token_status = true;
+        }
         return [
             Yii::$app->respStandarts->getSuccessKeyWord() => true,
             "statusCode" => Yii::$app->respStandarts->userSocialDataCode(),
@@ -79,12 +93,19 @@ class UserController extends ApiController
                         'social_net' => $social->social_net,
                         'key' => $social->key,
                         'social_token' => $social->social_token,
-                        'token_status' => $social->token_status,
+                        'token_status' => $token_status,
                     ]
         ];
     }     
 
     protected function userSocialPermission($social) {
+        if($social->token_status == '0'){
+            $token_status = false;
+        }
+        if($social->token_status == '1'){
+            $token_status = true;
+        }
+        
         return [
             Yii::$app->respStandarts->getSuccessKeyWord() => true,
             "statusCode" => Yii::$app->respStandarts->userSocialPermissionCode(),
@@ -93,17 +114,17 @@ class UserController extends ApiController
 //                        'social_net' => $social->social_net,
 //                        'key' => $social->key,
 //                        'social_token' => $social->social_token,
-                        'permission' => $social->token_status,
+                        'social_token_status' => $token_status,
                     ]
         ];
     }
             
-    protected function errorOnSave() {
+    protected function errorOnSave($social) {
         return [
             Yii::$app->respStandarts->getSuccessKeyWord() => false,
             "errorCode" => Yii::$app->respStandarts->errorOnSaveCode(),
-            "errorDescription" => Yii::$app->respStandarts->errorOnSaveDesc()
-            //"errorDescription" => $social->getErrors()
+            "errorDescription" => Yii::$app->respStandarts->errorOnSaveDesc(),
+            "test_errorDescription" => $social->getErrors()
         ];
     }
 
@@ -193,8 +214,19 @@ class UserController extends ApiController
             "errorCode" => Yii::$app->respStandarts->userAccessTokenEmptyCode(),
             "errorDescription" => Yii::$app->respStandarts->userAccessTokenEmptyDesc()
         ];
-    } 
-    
+    }
+
+    protected function userNotHaveSocial() {
+        return [
+            Yii::$app->respStandarts->getSuccessKeyWord() => true,
+            "statusCode" => Yii::$app->respStandarts->userSocialPermissionCode(),
+            'data' => [
+                'social_token_status' => false,
+            ]
+        ];
+    }
+
+
 
 /**/
     
@@ -482,6 +514,110 @@ class UserController extends ApiController
         }
     }
 
+/*-------reg auth user by socil net ----------*/    
+    
+    public function actionRasocialnet()
+    {
+        //for user class
+        $username = null;
+        $email = null;
+        $password_hash = null;
+        $status = User::STATUS_ACTIVE;
+        
+
+        //for social class
+        $user_id = null;
+        $social_net = null;
+        $key = null;
+
+        $request = \Yii::$app->request;
+
+        if(!$request->post()){
+            return $this->postEmpty();
+        }
+
+        if($request->post('token')){
+            $key = $request->post('token');
+        }
+
+        if ($request->post('email')) {
+            $email = strtolower($request->post('email'));
+        }
+        if(!$email){
+            return $this->emailEmpty();
+        }
+
+        if ($request->post('social_net')) {
+            $social_net = strtolower($request->post('social_net'));
+        }
+        if(!$social_net){
+            return $this->userSocialNetEmpty();
+        }
+        if($social_net == 1){
+            $social_net = Social::FACEBOOK;
+        }
+        if($social_net == 2){
+            $social_net = Social::GOOGLE;
+        }
+        
+
+        $user = new User();
+        $user = $user->findByUseremail($email);
+
+        /*social block*/
+        $soc_user = Social::findByKey($key); 
+        if($soc_user){
+//            $user = User::findIdentity($soc_user->user_id);
+//            var_dump($soc_user->user_id);
+            $user = User::findById($soc_user->user_id);
+//            var_dump($user);die;
+            
+            return $this->userWithProfile($user);
+        }
+        /*--*/
+        if(!$user){
+            
+            //create new
+            $user = new User();
+            $user->username = $username;
+            $user->password_hash = '-';
+            $user->email = $email;
+            $user->status = $status;
+            $user->accessToken = $user->generateToken();
+            $user->tokenTime = date_create('now')->format('U');
+
+            if($user->save()){
+                $social = new Social();
+                $social->user_id = $user->id; 
+                $social->social_net = $social_net;
+                $social->key = $key;
+
+                if($social->save()){
+                    return $this->userWithoutProfile($user);
+                }else{
+                    return $this->errorOnSave();
+                }
+            }else{
+                return $this->errorOnSave();
+            }
+
+        }else{
+            $user->accessToken = $user->generateToken();
+            $user->tokenTime = date_create('now')->format('U');
+            if($user->save()){
+                if(Profile::findById($user->id) && Photo::findById($user->id)){
+                    return $this->userWithProfile($user);
+                }else{
+                    return $this->userWithoutProfile($user);
+                }
+                
+            }else{
+                return $this->errorOnSave();
+            }
+        }
+    }
+    
+    
 
 /*-----------------------------*/
 
@@ -490,18 +626,29 @@ class UserController extends ApiController
     {
         $request = \Yii::$app->request;
         
+        $accessToken = null;
         $user_id = null;
         $social_net = null;
         $social_token = null;
         $key = null;
         
-        if($request->post('user_id')){
-            $user_id = $request->post('user_id');
-        }        
-        if(!$user_id){
-            return $this->userIdEmpty();
+//        if($request->post('user_id')){
+//            $user_id = $request->post('user_id');
+//        }        
+//        if(!$user_id){
+//            return $this->userIdEmpty();
+//        }
+        if($request->post('accessToken')){
+            $accessToken = $request->post('accessToken');
+        }  
+        if ($request->headers['accessToken']) {
+            $accessToken = $request->headers['accessToken'];
         }
-                
+        if(!$accessToken){
+            return $this->userAccessTokenEmpty();
+        }
+
+        
         if($request->post('social_net')){
             $social_net = $request->post('social_net');
         }        
@@ -525,8 +672,13 @@ class UserController extends ApiController
         }
 //        var_dump($social->findByUserIdAndSocNet($user_id,$socail_net));die;
         
+        $user = User::findIdentityByAccessToken($accessToken); 
+        
+        if(!$user){
+            return $this->userNotFound();
+        }
         //find user by id and social net
-        $social_user = $social->findByUserIdAndSocNet($user_id,$socail_nets);
+        $social_user = $social->findByUserIdAndSocNet($user->id,$socail_nets);
         
         if($social_user){
             $social_user->social_token = $social_token;
@@ -548,14 +700,22 @@ class UserController extends ApiController
             
         }else{
             
-            if($request->post('key')){
-                $key = $request->post('key');
-            }        
-            if(!$key){
-                return $this->userSocialKeyEmpty();
-            }
-            $social->key = $key;
-            $social->user_id = $user_id;
+//            if($request->post('key')){
+//                $key = $request->post('key');
+//            }        
+//            if(!$key){
+//                return $this->userSocialKeyEmpty();
+//            }
+//            if($key){
+//                $soc_net = Social::findByKey($key);
+//                if($soc_net){
+//                    return $this->socAccUsed();
+//                }
+//            }
+            
+            
+            $social->key = '';
+            $social->user_id = $user->id;
             $social->social_token = $social_token;
             $social->token_status = 1;
             
@@ -566,10 +726,11 @@ class UserController extends ApiController
                 $social->social_net = Social::GOOGLE;
             }
             
-            if($social->save()){
+            if($social->save(false)){
                 return $this->userSocialData($social);
-            }else{                
-                return $this->errorOnSave();
+            }else{   
+//                return $social->getErrors();
+                return $this->errorOnSave($social);
             }
         }
         
@@ -663,7 +824,7 @@ class UserController extends ApiController
 
 /*---------------------------------*/
     
-    public function actionCheckSocialPermission()
+    public function actionCheckSocialTokenStatus()
     {
         $request = \Yii::$app->request;
         
@@ -672,16 +833,26 @@ class UserController extends ApiController
         
         if($request->post('accessToken')){
             $accessToken = $request->post('accessToken');
-        }        
+        }
+        if ($request->headers['accessToken']) {
+            $accessToken = $request->headers['accessToken'];
+        }
         if(!$accessToken){
             return $this->userAccessTokenEmpty();
         }
         
         if($request->post('social_net')){
             $social_net = $request->post('social_net');
+            if($social_net == 1){
+                $social_net = Social::FACEBOOK;
+            }
+            if($social_net == 2){
+                $social_net = Social::GOOGLE;
+            }
         }        
         if(!$social_net){
             return $this->userSocialNetEmpty();
+
         }
         
         $user = User::findIdentityByAccessToken($accessToken);
@@ -691,7 +862,8 @@ class UserController extends ApiController
         $social = Social::findByUserIdAndSocNet($user->id, $social_net);
         
         if(!$social){
-            return $this->userSocialEmpty();
+            return $this->userNotHaveSocial();
+//            return $this->userSocialEmpty();
         }else{
             return $this->userSocialPermission($social);
         }
