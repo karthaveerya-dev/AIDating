@@ -3,8 +3,8 @@
 return [
     'class' => 'yii\db\Connection',
     'dsn' => 'mysql:host=localhost;dbname=aidating',
-    'username' => 'root',
-    'password' => '111',
+    'username' => 'Username',
+    'password' => 'Password',
     'charset' => 'utf8',
 
     // Schema cache options (for production environment)
